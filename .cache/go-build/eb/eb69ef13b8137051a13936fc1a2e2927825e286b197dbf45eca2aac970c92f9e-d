@@ -1,0 +1,7 @@
+./batch.go
+./dialer.go
+./dns.go
+./happyeyeballs.go
+./happyeyeballsv2.go
+./setopt_windows.go
+./timer.go

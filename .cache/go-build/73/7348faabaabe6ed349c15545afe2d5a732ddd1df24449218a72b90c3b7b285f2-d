@@ -1,0 +1,5 @@
+./contributed_browser_profiles.go
+./contributed_custom_profiles.go
+./internal_browser_profiles.go
+./internal_custom_profiles.go
+./profiles.go

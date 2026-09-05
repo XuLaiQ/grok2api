@@ -1,0 +1,7 @@
+# test log
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestPrepareWritesPrivateScopedBootstrap3004347498\001
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestPrepareWritesPrivateScopedBootstrap3004347498\001\.quality-guard-bootstrap-1028795603
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestPrepareWritesPrivateScopedBootstrap3004347498\001\bootstrap.json
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestPrepareWritesPrivateScopedBootstrap3004347498\001\bootstrap.json
+open C:\Users\LAIXU~1\AppData\Local\Temp

@@ -1,0 +1,5 @@
+./assignment.go
+./operations.go
+./service.go
+./subscription.go
+./sync.go

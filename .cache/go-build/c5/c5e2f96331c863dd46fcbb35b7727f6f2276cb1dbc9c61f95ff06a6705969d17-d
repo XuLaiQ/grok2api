@@ -1,0 +1,5 @@
+./adler32.go
+./crc32.go
+./hmac.go
+./info.go
+./tool.go

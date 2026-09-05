@@ -1,0 +1,21 @@
+# test log
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestLocalStoreWritesAndRejectsTraversal1149989454\001
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestLocalStoreWritesAndRejectsTraversal1149989454\001\images\im
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestLocalStoreWritesAndRejectsTraversal1149989454\001\images
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestLocalStoreWritesAndRejectsTraversal1149989454\001
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestLocalStoreWritesAndRejectsTraversal1149989454\001\images\im\.image-1504765467
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestLocalStoreWritesAndRejectsTraversal1149989454\001\images\im\img_abcdefghijklmnopqrstuvwxyz.jpg
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestLocalStoreWritesAndRejectsTraversal1149989454\001\images\im
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestLocalStoreWritesAndRejectsTraversal1149989454\001\images\im\.image-2726618040
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestLocalStoreRetriesTemporaryCleanupWithoutDeletingCommittedIma1773181467\001
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestLocalStoreRetriesTemporaryCleanupWithoutDeletingCommittedIma1773181467\001\images\im
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestLocalStoreRetriesTemporaryCleanupWithoutDeletingCommittedIma1773181467\001\images
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestLocalStoreRetriesTemporaryCleanupWithoutDeletingCommittedIma1773181467\001
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestLocalStoreRetriesTemporaryCleanupWithoutDeletingCommittedIma1773181467\001\images\im\.image-1948616851
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestLocalStoreRetriesTemporaryCleanupWithoutDeletingCommittedIma1773181467\001\images\im\img_cleanup_retry_0000000001.png
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestLocalStoreRetriesTemporaryCleanupWithoutDeletingCommittedIma1773181467\001\images\im
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestLocalStoreRetriesTemporaryCleanupWithoutDeletingCommittedIma1773181467\001\images\im
+open C:\Users\LAIXU~1\AppData\Local\Temp

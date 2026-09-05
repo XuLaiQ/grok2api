@@ -1,0 +1,14 @@
+# test log
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestFrontendStaticFilesAndSPAFallback998358157\001\assets
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestFrontendStaticFilesAndSPAFallback998358157\001
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestFrontendStaticFilesAndSPAFallback998358157\001\index.html
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestFrontendStaticFilesAndSPAFallback998358157\001\assets\app.js
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestFrontendStaticFilesAndSPAFallback998358157\001
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestFrontendStaticFilesAndSPAFallback998358157\001\index.html
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestFrontendStaticFilesAndSPAFallback998358157\001\assets\app.js
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestFrontendStaticFilesAndSPAFallback998358157\001\assets\app.js
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestFrontendStaticFilesAndSPAFallback998358157\001\dashboard
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestFrontendStaticFilesAndSPAFallback998358157\001\index.html
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestFrontendStaticFilesAndSPAFallback998358157\001\assets\missing.js
+open C:\Users\LAIXU~1\AppData\Local\Temp

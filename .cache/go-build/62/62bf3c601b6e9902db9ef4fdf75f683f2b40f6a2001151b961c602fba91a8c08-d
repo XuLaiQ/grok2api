@@ -1,0 +1,10 @@
+# test log
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestAuditDetailReturnsCompleteTextAndBinaryBodies1172081161\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestQualityGuardAuditListMarksOwnProbeWithoutExposingKeyIdentity2364800647\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestDegradeAccountsListsHardHitsAndRejectsUnknownWindow3110630405\001
+open C:\Users\LAIXU~1\AppData\Local\Temp

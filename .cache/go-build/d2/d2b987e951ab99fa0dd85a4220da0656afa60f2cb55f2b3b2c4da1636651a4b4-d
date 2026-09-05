@@ -1,0 +1,10 @@
+# test log
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestRefreshTokenRotationAndLogout2268204357\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestChangePasswordRevokesAllSessions3252103339\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestConcurrentRefreshAllowsExactlyOneRotation1470116004\001
+open C:\Users\LAIXU~1\AppData\Local\Temp

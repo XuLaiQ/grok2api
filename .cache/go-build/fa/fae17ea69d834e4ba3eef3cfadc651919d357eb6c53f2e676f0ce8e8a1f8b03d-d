@@ -1,0 +1,13 @@
+./client.go
+./client_options.go
+./connect.go
+./ja3.go
+./jar.go
+./logger.go
+./mapper.go
+./pinner.go
+./racer.go
+./roundtripper.go
+./utils.go
+./websocket.go
+./websocket_options.go

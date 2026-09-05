@@ -1,0 +1,9 @@
+./aes.go
+./amd64.go
+./field.go
+./ntt.go
+./pack.go
+./params.go
+./poly.go
+./stubs_amd64.go
+./amd64.s

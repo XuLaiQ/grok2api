@@ -1,0 +1,21 @@
+# test log
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestReadinessKeepsBuildReadyWhenWebIsUnavailable872274541\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestReadinessRejectsAccountWithoutAccessToken2278592851\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestReadinessRestoresPersistedCooldownWithoutUpstreamProbe4197809944\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestPreflightDeploymentCreatesAndValidatesSharedMediaMarker1686789856\001\.grok2api-cluster
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestPreflightDeploymentCreatesAndValidatesSharedMediaMarker1686789856\001\.grok2api-cluster
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestPreflightDeploymentCreatesAndValidatesSharedMediaMarker1686789856\001\.grok2api-preflight-599248186
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestPreflightDeploymentCreatesAndValidatesSharedMediaMarker1686789856\001\.grok2api-preflight-599248186
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestPreflightDeploymentCreatesAndValidatesSharedMediaMarker1686789856\001\.grok2api-cluster
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestPreflightDeploymentCreatesAndValidatesSharedMediaMarker1686789856\001\.grok2api-cluster
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestPreflightDeploymentCreatesAndValidatesSharedMediaMarker1686789856\001\.grok2api-preflight-3444806959
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestPreflightDeploymentCreatesAndValidatesSharedMediaMarker1686789856\001\.grok2api-preflight-3444806959
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestPreflightDeploymentCreatesAndValidatesSharedMediaMarker1686789856\001\.grok2api-cluster
+open C:\Users\LAIXU~1\AppData\Local\Temp

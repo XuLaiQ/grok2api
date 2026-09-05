@@ -1,0 +1,13 @@
+# test log
+getenv GOTMPDIR
+open C:\Users\LAIXU~1\AppData\Local\Temp\TestDefaultConfigPathFindsRepositoryRoot1662111897\001\config.yaml
+open .
+chdir C:\Users\LAIXU~1\AppData\Local\Temp\TestDefaultConfigPathFindsRepositoryRoot1662111897\001\backend
+stat config.yaml
+stat ..\config.yaml
+chdir F:\token-p\grok-api\backend\internal\cli
+open C:\Users\LAIXU~1\AppData\Local\Temp
+stat config.yaml
+stat ..\config.yaml
+stat config.yaml
+stat ..\config.yaml

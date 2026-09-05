@@ -1,0 +1,4 @@
+./f1600x.go
+./f1600x4_amd64.go
+./f1600x4stubs_amd64.go
+./f1600x4_amd64.s

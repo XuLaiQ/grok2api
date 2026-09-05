@@ -1,0 +1,3 @@
+./frontend.go
+./server.go
+./swagger_annotations.go

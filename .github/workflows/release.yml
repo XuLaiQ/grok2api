@@ -1,0 +1,102 @@
+name: Release bundles
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Linux ${{ matrix.arch }} bundle
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
+          test "$(tr -d '\r\n' < VERSION)" = "$RELEASE_TAG"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+      - name: Test update runtime
+        if: matrix.arch == 'amd64'
+        working-directory: backend
+        run: go test ./internal/updateruntime ./internal/application/updatecheck ./internal/cli
+      - name: Build backend
+        working-directory: backend
+        env:
+          GOOS: linux
+          GOARCH: ${{ matrix.arch }}
+          CGO_ENABLED: "0"
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: >-
+          go build -buildvcs=false -trimpath
+          -ldflags="-s -w -X github.com/chenyme/grok2api/backend/internal/buildinfo.Version=$RELEASE_TAG"
+          -o ../bundle/grok2api ./cmd/grok2api
+      - name: Package bundle
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_ARCH: ${{ matrix.arch }}
+        run: |
+          mkdir -p bundle/frontend artifacts
+          cp VERSION bundle/VERSION
+          cp -R frontend/dist bundle/frontend/dist
+          chmod 0755 bundle/grok2api
+          tar -czf "artifacts/grok2api_${RELEASE_TAG}_linux_${RELEASE_ARCH}.tar.gz" -C bundle grok2api VERSION frontend/dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-linux-${{ matrix.arch }}
+          path: artifacts/*.tar.gz
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-linux-*
+          path: artifacts
+          merge-multiple: true
+      - name: Generate checksums
+        working-directory: artifacts
+        run: sha256sum *.tar.gz > checksums.txt
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          flags=()
+          if [[ "$RELEASE_TAG" == *-* && ! "$RELEASE_TAG" =~ -hotfix\.[0-9]+$ ]]; then flags+=(--prerelease); fi
+          gh release create "$RELEASE_TAG" artifacts/*.tar.gz artifacts/checksums.txt \
+            --verify-tag --generate-notes --title "$RELEASE_TAG" "${flags[@]}"

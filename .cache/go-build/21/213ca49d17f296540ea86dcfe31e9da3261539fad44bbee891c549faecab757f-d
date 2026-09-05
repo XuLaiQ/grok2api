@@ -1,0 +1,25 @@
+# test log
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestCreateUsesG2AClientKeyFormat2381029783\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestQualityGuardIdentityIsStableHiddenAndSystemManaged494452117\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestUnlimitedRuntimeLimitsBypassLimiterStores3832487551\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestAuthenticateDistinguishesRuntimeStoreFailures2831032762\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestBillingLimitUsesAtomicReservations1386296721\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestCleanupExpiredBillingProtectsActiveRequest3560272213\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestAuthenticateCachesUnlimitedKeyAndInvalidatesOnDisable695635331\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestAccountScopePersistsAndAuthCacheInvalidatesOnChange3376958211\001
+open C:\Users\LAIXU~1\AppData\Local\Temp

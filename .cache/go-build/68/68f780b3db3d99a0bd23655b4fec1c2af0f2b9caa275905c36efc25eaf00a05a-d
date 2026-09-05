@@ -1,0 +1,10 @@
+# test log
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestSyncAggregatesCapabilitiesFromAllAccounts388424966\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestSyncAccountNormalizesBuildVideo15ByBillingSuper106877162\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestSyncAccountRunsUpstreamDiscoveryConcurrently3441537638\001
+open C:\Users\LAIXU~1\AppData\Local\Temp

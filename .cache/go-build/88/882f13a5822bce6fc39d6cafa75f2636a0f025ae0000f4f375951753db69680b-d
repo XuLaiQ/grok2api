@@ -1,0 +1,13 @@
+# test log
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestLinkedDeleteMissingAccountReturnsNotFound3128925012\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestClearCooldownResetsHealthAndSelectorCache865998499\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestUpdateCooldownWarningRequiresEnabledChange611930708\001
+open C:\Users\LAIXU~1\AppData\Local\Temp
+getenv GOTMPDIR
+stat C:\Users\LAIXU~1\AppData\Local\Temp\TestRefreshTokenImportHTTPReturnsPartialResult1305600622\001
+open C:\Users\LAIXU~1\AppData\Local\Temp

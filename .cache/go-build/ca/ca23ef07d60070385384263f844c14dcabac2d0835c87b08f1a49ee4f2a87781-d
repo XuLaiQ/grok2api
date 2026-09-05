@@ -1,0 +1,12 @@
+./assignment.go
+./operations.go
+./probe_match.go
+./service.go
+./subscription.go
+./subscription_clash.go
+./sync.go
+./assignment_bounds_test.go
+./probe_match_test.go
+./quality_probe_test.go
+./service_test.go
+./subscription_test.go

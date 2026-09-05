@@ -1,0 +1,8 @@
+./buildclient.go
+./flaresolverr.go
+./manager.go
+./physical_calls.go
+./pinnedclient.go
+./sticky_retry.go
+./tlsclient.go
+./trace.go

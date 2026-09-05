@@ -1,0 +1,8 @@
+./arith.go
+./arith_amd64.go
+./doc.go
+./p384.go
+./p384opt.go
+./point.go
+./tableBase.go
+./arith_amd64.s

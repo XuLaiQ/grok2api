@@ -1,0 +1,4 @@
+./model.go
+./reasoning.go
+./model_test.go
+./reasoning_test.go
