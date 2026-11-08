@@ -1,6 +1,7 @@
 # OS and editors
 .DS_Store
 Thumbs.db
+Desktop.ini
 .idea/
 .vscode/
 *.swp
@@ -14,39 +15,65 @@ Thumbs.db
 /config.yaml
 /config.local.yaml
 /config.*.local.yaml
-/docs/*
-/docs/rules/*
-/backend/docs/goal/
+/backend/config.yaml
+/backend/config.local.yaml
+/backend/config.*.local.yaml
 *.har
 *.pcap
 *.pcapng
+
+# Local working notes (keep project documentation trackable)
+/docs/rules/
+/backend/docs/goal/
 
 # Runtime data
 /data/
 /backend/data/
 *.log
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-shm
+*.sqlite3-wal
+
+# Build caches
+.cache/
 
 # Go
 /.gocache/
 /.gocache-*/
+/grok2api
+/grok2api.exe
 /backend/grok2api
-/backend/coverage.out
+/backend/grok2api.exe
+coverage.out
 *.coverprofile
 *.test
+*.test.exe
 
 # Python
+.venv/
 __pycache__/
 *.py[cod]
 
 # Frontend
-/.pnpm-store/
-/frontend/node_modules/
+.pnpm-store/
+node_modules/
 /frontend/dist/
-/frontend/.cache/
-/frontend/*.tsbuildinfo
+*.tsbuildinfo
+.eslintcache
 
-# Temporary files
+# Release bundles and temporary files
 /release/
+/bundle/
+/artifacts/
 /.tmp/
 /tmp/
 /Dockerfile.local

@@ -231,6 +231,93 @@ func (s *Service) PublicAPIBaseURL() string {
 	return s.cfg.Frontend.EffectivePublicAPIBaseURL()
 }
 
+// UpgradeBuildClientVersion 单调提升 Build 协议版本，并通过持久化通知同步到其他实例。
+func (s *Service) UpgradeBuildClientVersion(ctx context.Context, requiredVersion string) (string, bool, error) {
+	requiredVersion, valid := settingsdomain.NormalizeStableBuildClientVersion(requiredVersion)
+	if !valid {
+		return "", false, fmt.Errorf("上游要求的 Grok Build 版本无效")
+	}
+	s.updateMu.Lock()
+	defer s.updateMu.Unlock()
+
+	for attempt := 0; attempt < 2; attempt++ {
+		s.mu.RLock()
+		current := s.cfg
+		currentRevision := s.revision
+		s.mu.RUnlock()
+		currentVersion, currentValid := settingsdomain.NormalizeStableBuildClientVersion(current.Provider.Build.ClientVersion)
+		if currentValid {
+			comparison, _ := settingsdomain.CompareStableBuildClientVersions(requiredVersion, currentVersion)
+			if comparison <= 0 {
+				return currentVersion, false, nil
+			}
+		}
+
+		next := current
+		next.Provider.Build.ClientVersion = requiredVersion
+		next.Provider.Build.UserAgent = "grok-shell/" + requiredVersion + " (linux; x86_64)"
+		if err := next.Validate(); err != nil {
+			return "", false, fmt.Errorf("校验 Grok Build 版本升级: %w", err)
+		}
+		updatedAt, revision, err := s.repository.Save(ctx, toDomainConfig(next), currentRevision)
+		if err != nil {
+			if errors.Is(err, repository.ErrConflict) {
+				if reloadErr := s.reloadLatestSettings(ctx); reloadErr != nil {
+					return "", false, reloadErr
+				}
+				continue
+			}
+			return "", false, err
+		}
+
+		s.mu.Lock()
+		s.cfg = next
+		s.updatedAt = updatedAt
+		s.revision = revision
+		apply := s.apply
+		s.mu.Unlock()
+		if apply != nil {
+			apply(next)
+		}
+		if s.notify != nil {
+			s.notify(ctx)
+		}
+		return requiredVersion, true, nil
+	}
+	return "", false, repository.ErrConflict
+}
+
+func (s *Service) reloadLatestSettings(ctx context.Context) error {
+	value, updatedAt, revision, found, err := s.repository.Get(ctx)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return repository.ErrConflict
+	}
+	s.mu.RLock()
+	current := s.cfg
+	currentRevision := s.revision
+	s.mu.RUnlock()
+	if revision <= currentRevision {
+		return repository.ErrConflict
+	}
+	next := applyDomainConfig(current, value)
+	if err := next.Validate(); err != nil {
+		return fmt.Errorf("校验并发重载的运行设置: %w", err)
+	}
+	s.mu.Lock()
+	s.cfg = next
+	s.updatedAt = updatedAt
+	s.revision = revision
+	apply := s.apply
+	s.mu.Unlock()
+	if apply != nil {
+		apply(next)
+	}
+	return nil
+}
+
 // Update 校验并持久化运行设置，再原子替换进程内配置。
 func (s *Service) Update(ctx context.Context, expectedRevision uint64, input EditableConfig) (Snapshot, error) {
 	s.updateMu.Lock()
@@ -515,6 +602,21 @@ func toDomainConfig(value config.Config) settingsdomain.Config {
 
 func intPointer(value int) *int { return &value }
 
+func recommendedBuildVersion(current string) string {
+	currentVersion, currentValid := settingsdomain.NormalizeStableBuildClientVersion(current)
+	baseline, baselineValid := settingsdomain.NormalizeStableBuildClientVersion(config.RecommendedBuildClientVersion)
+	if currentValid {
+		if baselineValid {
+			comparison, _ := settingsdomain.CompareStableBuildClientVersions(currentVersion, baseline)
+			if comparison < 0 {
+				return baseline
+			}
+		}
+		return currentVersion
+	}
+	return config.RecommendedBuildClientVersion
+}
+
 func (s *Service) snapshotLocked() Snapshot {
 	restartRequired := []string{}
 	if s.cfg.Audit.BufferSize != s.activeBufferSize {
@@ -525,10 +627,10 @@ func (s *Service) snapshotLocked() Snapshot {
 	}
 	return Snapshot{
 		Config: toEditable(s.cfg),
-		RecommendedProviderBuild: ProviderBuildRecommendation{
-			ClientVersion: config.RecommendedBuildClientVersion,
-			UserAgent:     config.RecommendedBuildUserAgent,
-		},
+		RecommendedProviderBuild: func() ProviderBuildRecommendation {
+			version := recommendedBuildVersion(s.cfg.Provider.Build.ClientVersion)
+			return ProviderBuildRecommendation{ClientVersion: version, UserAgent: "grok-shell/" + version + " (linux; x86_64)"}
+		}(),
 		UpdatedAt: s.updatedAt, Revision: s.revision, RestartRequired: restartRequired,
 	}
 }

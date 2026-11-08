@@ -24,6 +24,21 @@ func TestPreserveActiveLocalQuotaWindowsUntilReset(t *testing.T) {
 	}
 }
 
+func TestQuotaWindowReportsExhaustionIgnoresConsoleZeroLimit(t *testing.T) {
+	freeTier := accountdomain.QuotaWindow{Mode: "console", Remaining: 0, Total: 0}
+	if quotaWindowReportsExhaustion(freeTier) {
+		t.Fatal("Console window without an included pool was reported as exhausted")
+	}
+	spent := accountdomain.QuotaWindow{Mode: "console", Remaining: 0, Total: 100}
+	if !quotaWindowReportsExhaustion(spent) {
+		t.Fatal("spent Console pool was not reported as exhausted")
+	}
+	available := accountdomain.QuotaWindow{Mode: "console", Remaining: 5, Total: 100}
+	if quotaWindowReportsExhaustion(available) {
+		t.Fatal("available Console window was reported as exhausted")
+	}
+}
+
 func TestQuotaRecoveryDueAtSchedulesUnknownRemoteWindowProbe(t *testing.T) {
 	now := time.Date(2026, 8, 5, 8, 0, 0, 0, time.UTC)
 	window := accountdomain.QuotaWindow{Mode: "console", Remaining: 0, Source: accountdomain.QuotaSourceUpstream}

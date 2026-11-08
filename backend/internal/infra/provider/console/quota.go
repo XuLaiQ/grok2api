@@ -114,7 +114,10 @@ func (a *Adapter) syncConsoleQuotas(ctx context.Context, credential account.Cred
 		var resetAt *time.Time
 		if mode == QuotaMode {
 			windowSeconds = int(consolePredictedChatRecoveryWindow / time.Second)
-			if quota.Remaining == 0 {
+			// limit=0 is the free-tier shape: there is no included pool, so a
+			// zero remaining is not an exhausted budget and must not predict a
+			// reset that would otherwise look like a durable quota block.
+			if quota.Remaining == 0 && quota.Limit > 0 {
 				predicted := now.Add(consolePredictedChatRecoveryWindow)
 				resetAt = &predicted
 			}

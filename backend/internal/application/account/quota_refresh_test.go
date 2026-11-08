@@ -363,12 +363,13 @@ func TestRefreshQuotaModeDoesNotTriggerFullProviderSyncForAutoTier(t *testing.T)
 
 func TestReconcileConsoleRateLimitVerifiesUsageBeforeExhausting(t *testing.T) {
 	tests := []struct {
-		name      string
-		remaining int
-		wantState RateLimitReconcileState
+			name      string
+			remaining int
+			zeroTotal bool
+			wantState RateLimitReconcileState
 	}{
 		{name: "transient rate limit keeps available quota", remaining: 9, wantState: RateLimitReconcileAvailable},
-		{name: "confirmed zero quota remains exhausted", remaining: 0, wantState: RateLimitReconcileExhausted},
+		{name: "confirmed zero quota remains exhausted", remaining: 0, zeroTotal: false, wantState: RateLimitReconcileExhausted},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -398,7 +399,7 @@ func TestReconcileConsoleRateLimitVerifiesUsageBeforeExhausting(t *testing.T) {
 			}); err != nil {
 				t.Fatal(err)
 			}
-			adapter := &rateLimitConsoleQuotaAdapter{remaining: test.remaining}
+			adapter := &rateLimitConsoleQuotaAdapter{remaining: test.remaining, zeroTotal: test.zeroTotal}
 			service := NewService(accounts, nil, nil, nil, provider.NewRegistry(adapter), nil, nil)
 			service.SetQuotaRecoveryQueue(memory.NewQuotaRecoveryQueue())
 
@@ -418,6 +419,47 @@ func TestReconcileConsoleRateLimitVerifiesUsageBeforeExhausting(t *testing.T) {
 				t.Fatalf("stored Console window = %#v, want remaining=%d", window, test.remaining)
 			}
 		})
+	}
+}
+
+// A Console account whose usage endpoint reports limit=0 has no included pool
+// (free tier). A 429 there is transient rate limiting, not exhausted quota.
+func TestReconcileConsoleRateLimitTreatsZeroLimitAsAvailable(t *testing.T) {
+	ctx := context.Background()
+	database, err := relational.OpenSQLite(ctx, filepath.Join(t.TempDir(), "console-rate-limit-free.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = database.Close() })
+	if err := database.InitializeSchema(ctx); err != nil {
+		t.Fatal(err)
+	}
+	accounts := relational.NewAccountRepository(database)
+	credential, _, err := accounts.UpsertByIdentity(ctx, accountdomain.Credential{
+		Provider: accountdomain.ProviderConsole, AuthType: accountdomain.AuthTypeSSO,
+		Name: "console-free-tier", SourceKey: "console-free-tier", EncryptedAccessToken: "encrypted",
+		Enabled: true, AuthStatus: accountdomain.AuthStatusActive,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	adapter := &rateLimitConsoleQuotaAdapter{remaining: 0, zeroTotal: true}
+	service := NewService(accounts, nil, nil, nil, provider.NewRegistry(adapter), nil, nil)
+	service.SetQuotaRecoveryQueue(memory.NewQuotaRecoveryQueue())
+
+	state, err := service.ReconcileRateLimit(ctx, credential.ID, "console", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if state != RateLimitReconcileAvailable {
+		t.Fatalf("state = %s, want %s", state, RateLimitReconcileAvailable)
+	}
+	recoveries, err := accounts.GetQuotaRecoveries(ctx, []uint64{credential.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(recoveries) != 0 {
+		t.Fatalf("free-tier account scheduled a durable quota recovery: %#v", recoveries)
 	}
 }
 
@@ -1334,6 +1376,8 @@ type consoleQuotaSnapshotAdapter struct {
 type rateLimitConsoleQuotaAdapter struct {
 	calls     atomic.Int64
 	remaining int
+	total     int
+	zeroTotal bool
 	err       error
 }
 
@@ -1354,8 +1398,12 @@ func (a *rateLimitConsoleQuotaAdapter) SyncQuota(_ context.Context, credential a
 		return provider.QuotaSnapshot{}, a.err
 	}
 	now := time.Now().UTC()
+	total := a.total
+	if !a.zeroTotal && total == 0 {
+		total = 10
+	}
 	return provider.QuotaSnapshot{SyncedAt: now, Windows: []accountdomain.QuotaWindow{
-		{AccountID: credential.ID, Mode: "console", Remaining: a.remaining, Total: 10, SyncedAt: &now, Source: accountdomain.QuotaSourceUpstream, UpdatedAt: now},
+		{AccountID: credential.ID, Mode: "console", Remaining: a.remaining, Total: total, SyncedAt: &now, Source: accountdomain.QuotaSourceUpstream, UpdatedAt: now},
 		{AccountID: credential.ID, Mode: "console_image", Remaining: 5, Total: 5, SyncedAt: &now, Source: accountdomain.QuotaSourceUpstream, UpdatedAt: now},
 		{AccountID: credential.ID, Mode: "console_video", Remaining: 2, Total: 2, SyncedAt: &now, Source: accountdomain.QuotaSourceUpstream, UpdatedAt: now},
 	}}, nil

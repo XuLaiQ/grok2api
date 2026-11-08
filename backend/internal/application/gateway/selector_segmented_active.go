@@ -202,10 +202,12 @@ func segmentedCandidateCohorts(values []account.RoutingCandidate, indexes []int,
 			preferFreeBuild: preferFreeBuild && candidate.IsKnownFreeBuild(),
 			tier:            tierOrderRank(tierOrder, candidate.Credential.WebTier), priority: candidate.Credential.Priority,
 		}
-		if candidate.QuotaWindow != nil && candidate.QuotaWindow.Source == account.QuotaSourceUpstream {
-			cohort.quotaKnown = true
-			cohort.quotaAvailable = candidate.QuotaWindow.Remaining > 0
-		}
+			if candidate.QuotaWindow != nil && candidate.QuotaWindow.Source == account.QuotaSourceUpstream {
+				if quotaWindowHasKnownLimit(candidate) {
+					cohort.quotaKnown = true
+					cohort.quotaAvailable = candidate.QuotaWindow.Remaining > 0
+				}
+			}
 		if candidate.Billing != nil {
 			cohort.billingFresh = now.Sub(candidate.Billing.SyncedAt) <= 30*time.Minute
 		}

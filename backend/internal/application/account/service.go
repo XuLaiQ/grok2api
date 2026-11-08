@@ -3053,7 +3053,10 @@ func (s *Service) ReconcileRateLimit(ctx context.Context, id uint64, mode string
 			}
 			return RateLimitReconcileInconclusive, err
 		}
-		if window.Remaining == 0 || window.UsagePercent >= 100 {
+		// A Console usage snapshot with total=0 means the account exposes no
+		// included pool (free tier). It is not evidence of exhaustion, so a 429
+		// must stay a transient soft cooldown instead of a durable quota block.
+		if window.Total > 0 && (window.Remaining == 0 || window.UsagePercent >= 100) {
 			return RateLimitReconcileExhausted, nil
 		}
 		return RateLimitReconcileAvailable, nil
@@ -3306,7 +3309,7 @@ func (s *Service) reconcileQuotaRecoveryWindow(ctx context.Context, providerValu
 	if s.quotaQueue == nil || !quotaWindowControlsRouting(providerValue, window.Mode) {
 		return nil
 	}
-	if dueAt := quotaRecoveryDueAt(window, s.now(), window.Remaining == 0); dueAt != nil {
+	if dueAt := quotaRecoveryDueAt(window, s.now(), quotaWindowReportsExhaustion(window)); dueAt != nil {
 		if err := s.quotaQueue.ScheduleQuotaRecovery(ctx, accountdomain.QuotaRecoveryEvent{AccountID: accountID, Mode: window.Mode, DueAt: *dueAt}); err != nil {
 			return fmt.Errorf("安排额度恢复事件: %w", err)
 		}
@@ -3316,6 +3319,19 @@ func (s *Service) reconcileQuotaRecoveryWindow(ctx context.Context, providerValu
 		return fmt.Errorf("取消额度恢复事件: %w", err)
 	}
 	return nil
+}
+
+// quotaWindowReportsExhaustion decides whether a persisted window is real
+// evidence of an empty pool. Console accounts without an included pool report
+// total=0, so their remaining=0 says nothing about callable capacity.
+func quotaWindowReportsExhaustion(window accountdomain.QuotaWindow) bool {
+	if window.Remaining > 0 {
+		return false
+	}
+	if isConsoleUsageQuotaMode(window.Mode) && window.Total <= 0 {
+		return false
+	}
+	return true
 }
 
 // quotaRecoveryDueAt keeps upstream quota exhaustion recoverable even when

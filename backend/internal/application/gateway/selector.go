@@ -1200,8 +1200,16 @@ func (s *Selector) quotaConsumptionSnapshot(provider account.Provider) map[accou
 	return result
 }
 
-func quotaWindowExhausted(candidate account.RoutingCandidate, consumed map[accountQuotaConsumptionKey]int) bool {
+func quotaWindowHasKnownLimit(candidate account.RoutingCandidate) bool {
 	if candidate.QuotaWindow == nil {
+		return false
+	}
+	// Console limit=0 means no included pool, not an exhausted pool.
+	return candidate.Credential.Provider != account.ProviderConsole || candidate.QuotaWindow.Total > 0
+}
+
+func quotaWindowExhausted(candidate account.RoutingCandidate, consumed map[accountQuotaConsumptionKey]int) bool {
+	if !quotaWindowHasKnownLimit(candidate) {
 		return false
 	}
 	remaining := candidate.QuotaWindow.Remaining - consumed[accountQuotaConsumptionKey{accountID: candidate.Credential.ID, mode: candidate.QuotaWindow.Mode}]

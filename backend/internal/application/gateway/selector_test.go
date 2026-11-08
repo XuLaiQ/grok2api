@@ -1297,6 +1297,34 @@ func TestSelectorConsumesOnlyMatchingQuotaSnapshot(t *testing.T) {
 	}
 }
 
+// Console free-tier accounts report limit=0 on the usage endpoint. That shape
+// means "no included pool", not "budget spent", so it must stay schedulable.
+func TestQuotaWindowExhaustedIgnoresConsoleZeroLimit(t *testing.T) {
+	noPool := account.RoutingCandidate{
+		Credential:  account.Credential{ID: 11, Provider: account.ProviderConsole},
+		QuotaWindow: &account.QuotaWindow{AccountID: 11, Mode: "console", Remaining: 0, Total: 0},
+	}
+	if quotaWindowExhausted(noPool, nil) {
+		t.Fatal("Console window without an included pool was treated as exhausted")
+	}
+
+	spent := account.RoutingCandidate{
+		Credential:  account.Credential{ID: 12, Provider: account.ProviderConsole},
+		QuotaWindow: &account.QuotaWindow{AccountID: 12, Mode: "console", Remaining: 0, Total: 100},
+	}
+	if !quotaWindowExhausted(spent, nil) {
+		t.Fatal("spent Console pool remained schedulable")
+	}
+
+	webSpent := account.RoutingCandidate{
+		Credential:  account.Credential{ID: 13, Provider: account.ProviderWeb},
+		QuotaWindow: &account.QuotaWindow{AccountID: 13, Mode: "fast", Remaining: 0, Total: 0},
+	}
+	if !quotaWindowExhausted(webSpent, nil) {
+		t.Fatal("Web zero remaining must still gate routing")
+	}
+}
+
 func TestSelectorWaitsBrieflyForAccountCapacity(t *testing.T) {
 	ctx := context.Background()
 	database, err := relational.OpenSQLite(ctx, filepath.Join(t.TempDir(), "capacity-wait.db"))

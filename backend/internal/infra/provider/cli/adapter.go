@@ -45,6 +45,10 @@ type Config struct {
 	StreamIdleTimeout     time.Duration
 }
 
+type BuildVersionUpgrader interface {
+	UpgradeBuildClientVersion(context.Context, string) (string, bool, error)
+}
+
 const (
 	subscriptionTierTimeout = 10 * time.Second
 	buildControlTimeout     = 30 * time.Second
@@ -54,20 +58,21 @@ const (
 
 // Adapter implements the Grok Build CLI Responses, model, Billing, and OAuth protocols.
 type Adapter struct {
-	cfgMu          sync.RWMutex
-	cfg            Config
-	http           *http.Client
-	oauth          *oauthClient
-	cipher         *security.Cipher
-	base           *buildDirectTransport
-	agentID        string
-	modelsMu       sync.Mutex
-	modelsETags    map[uint64]string
-	fallbackMarker FallbackMarker
-	uploadIssuer   VideoUploadIssuer
-	replay         *reasoningreplay.ReasoningReplay
-	compaction     *gatewayCompactionCodec
-	logger         *slog.Logger
+	cfgMu           sync.RWMutex
+	cfg             Config
+	http            *http.Client
+	oauth           *oauthClient
+	cipher          *security.Cipher
+	base            *buildDirectTransport
+	agentID         string
+	modelsMu        sync.Mutex
+	modelsETags     map[uint64]string
+	fallbackMarker  FallbackMarker
+	uploadIssuer    VideoUploadIssuer
+	versionUpgrader BuildVersionUpgrader
+	replay          *reasoningreplay.ReasoningReplay
+	compaction      *gatewayCompactionCodec
+	logger          *slog.Logger
 }
 
 func NewAdapter(cfg Config, cipher *security.Cipher) *Adapter {
@@ -101,6 +106,12 @@ func (a *Adapter) SetEgress(manager *infraegress.Manager) {
 // SetReasoningReplay injects the optional server-side reasoning replay cache.
 func (a *Adapter) SetReasoningReplay(replay *reasoningreplay.ReasoningReplay) {
 	a.replay = replay
+}
+
+func (a *Adapter) SetBuildVersionUpgrader(upgrader BuildVersionUpgrader) {
+	a.cfgMu.Lock()
+	a.versionUpgrader = upgrader
+	a.cfgMu.Unlock()
 }
 
 func (a *Adapter) Provider() account.Provider { return account.ProviderBuild }
@@ -227,6 +238,45 @@ func (a *Adapter) config() Config {
 	return a.cfg
 }
 
+func (a *Adapter) retryAfterBuildVersionUpgrade(ctx context.Context, request provider.ResponseResourceRequest, accessToken string, body []byte, base string, original responseCall, requiredVersion string) (responseCall, bool) {
+	cfg := a.config()
+	comparison, valid := settingsdomain.CompareStableBuildClientVersions(requiredVersion, cfg.ClientVersion)
+	if !valid || comparison <= 0 {
+		return original, false
+	}
+	upgrader := a.getBuildVersionUpgrader()
+	if upgrader == nil {
+		return original, false
+	}
+	appliedVersion, _, err := upgrader.UpgradeBuildClientVersion(ctx, requiredVersion)
+	if err != nil {
+		a.logger.Warn("build_client_version_upgrade_failed", "required_version", requiredVersion, "error", err)
+		return original, false
+	}
+	appliedVersion, valid = settingsdomain.NormalizeStableBuildClientVersion(appliedVersion)
+	if !valid {
+		return original, false
+	}
+	cfg = a.config()
+	cfg.ClientVersion = appliedVersion
+	cfg.UserAgent = buildUserAgent(appliedVersion)
+	a.UpdateConfig(cfg)
+	call := a.doResponseRequest(ctx, request, accessToken, body, base)
+	_ = original.response.Body.Close()
+	if call.err == nil && call.response != nil && call.response.StatusCode == http.StatusUpgradeRequired {
+		if nextVersion, ok := requiredBuildClientVersion(call.response, base); ok {
+			a.logger.Warn("build_client_version_upgrade_still_rejected", "applied_version", appliedVersion, "required_version", nextVersion)
+		}
+	}
+	return call, true
+}
+
+func (a *Adapter) getBuildVersionUpgrader() BuildVersionUpgrader {
+	a.cfgMu.RLock()
+	defer a.cfgMu.RUnlock()
+	return a.versionUpgrader
+}
+
 func (a *Adapter) ForwardResponse(ctx context.Context, request provider.ResponseResourceRequest) (*provider.Response, error) {
 	if request.NormalizedMetadata != nil {
 		*request.NormalizedMetadata = provider.NormalizedRequestMetadata{}
@@ -326,6 +376,16 @@ func (a *Adapter) ForwardResponse(ctx context.Context, request provider.Response
 	if err := normalizeGzipResponse(call.response); err != nil {
 		return nil, err
 	}
+	versionUpgradeRetried := false
+	if nextVersion, ok := requiredBuildClientVersion(call.response, base); ok {
+		call, versionUpgradeRetried = a.retryAfterBuildVersionUpgrade(ctx, request, accessToken, body, base, call, nextVersion)
+		if call.err != nil {
+			return nil, call.err
+		}
+		if err := normalizeGzipResponse(call.response); err != nil {
+			return nil, err
+		}
+	}
 	call, reasoningRecovery, recoveryErr := a.recoverReasoningDecodeFailure(ctx, request, accessToken, body, base, replayKey, call)
 	if recoveryErr != nil {
 		return nil, recoveryErr
@@ -334,7 +394,7 @@ func (a *Adapter) ForwardResponse(ctx context.Context, request provider.Response
 	var recoveredPrimaryFailure *provider.DiagnosticResponse
 	var recoveredPrimaryAttempt *provider.RecoveredAttempt
 	// Only eligible operations probe XAI with an equivalent request after the Build primary explicitly returns 403.
-	if strings.EqualFold(base, primaryBase) && shouldProbeXAIInferenceFallback(request.Credential, request.Billing, request.Method, request.Path, resp.StatusCode) {
+	if !versionUpgradeRetried && strings.EqualFold(base, primaryBase) && shouldProbeXAIInferenceFallback(request.Credential, request.Billing, request.Method, request.Path, resp.StatusCode) {
 		primaryCall := call
 		// Buffer the primary 403 body and replay it unchanged if fallback fails; never issue a second primary POST.
 		primaryBody, primaryTruncated, readErr := provider.ReadDiagnosticBody(resp.Body)

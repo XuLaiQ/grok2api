@@ -418,6 +418,7 @@ func New(ctx context.Context, cfg config.Config, logger *slog.Logger) (*Applicat
 		clientKeyService.UpdateDefaults(next.ClientKeyDefaults.RPMLimit, next.ClientKeyDefaults.MaxConcurrent)
 		accountService.UpdateAutoCleanConfig(accountAutoCleanConfig(next.Accounts))
 	})
+	cliAdapter.SetBuildVersionUpgrader(settingsService)
 	updateOptions := updatecheckapp.Options{
 		Directory:  cfg.Updates.Directory,
 		Repository: os.Getenv("GROK2API_UPDATE_REPOSITORY"),

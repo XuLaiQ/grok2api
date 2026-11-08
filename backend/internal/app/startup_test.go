@@ -15,6 +15,21 @@ import (
 	"github.com/chenyme/grok2api/backend/internal/infra/provider"
 )
 
+func TestStartupCandidateUsableTreatsConsoleZeroLimitAsUnknown(t *testing.T) {
+	now := time.Now().UTC()
+	candidate := accountdomain.RoutingCandidate{
+		Credential:  accountdomain.Credential{Provider: accountdomain.ProviderConsole, AuthType: accountdomain.AuthTypeSSO, AuthStatus: accountdomain.AuthStatusActive},
+		QuotaWindow: &accountdomain.QuotaWindow{Mode: "console", Remaining: 0, Total: 0},
+	}
+	if !startupCandidateUsable(candidate, now, nil) {
+		t.Fatal("Console account without an included pool was reported unavailable")
+	}
+	candidate.QuotaWindow.Total = 100
+	if startupCandidateUsable(candidate, now, nil) {
+		t.Fatal("Console account with an exhausted included pool was reported usable")
+	}
+}
+
 func TestReadinessStartupReportDoesNotExposeInternalErrors(t *testing.T) {
 	state := newStartupState(0)
 	state.recordError(errors.New("postgres://private-host/internal"))

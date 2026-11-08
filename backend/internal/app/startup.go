@@ -303,7 +303,15 @@ func startupCandidateUsable(candidate accountdomain.RoutingCandidate, now time.T
 	if candidate.Billing != nil && candidate.Billing.IsExhausted(credential.MinimumRemaining) {
 		return false
 	}
-	return candidate.QuotaWindow == nil || candidate.QuotaWindow.Remaining > 0
+	if candidate.QuotaWindow == nil {
+		return true
+	}
+	// Console free-tier accounts report total=0 with remaining=0: no included
+	// pool exists, so this is not evidence of an exhausted budget.
+	if credential.Provider == accountdomain.ProviderConsole && candidate.QuotaWindow.Total <= 0 {
+		return true
+	}
+	return candidate.QuotaWindow.Remaining > 0
 }
 
 func (a *Application) reconcileStartup(ctx context.Context) {
